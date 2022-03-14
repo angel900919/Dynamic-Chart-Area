@@ -16,9 +16,10 @@ import {
 } from 'd3-shape';
 import { scalePoint } from 'd3-scale';
 
-const chartData = [
-    { dateTime: 'Jan', valueWatts: 101},
-];
+let todayAux = new Date();
+let timeAux = todayAux.getHours() + ":" + todayAux.getMinutes() + ":" + todayAux.getSeconds()
+
+let chartData = [{dateTime:timeAux, valueWatts:1.5}];
 const PREFIX = 'Demo';
 
 const classes = {
@@ -47,7 +48,7 @@ const Area = props => (
     />
 );
 
-let variable = 0
+let power = 0
 
 export default function Processing(){
 
@@ -55,27 +56,30 @@ export default function Processing(){
     let today = new Date();
     let time = today.getHours() + ":" + today.getMinutes() + ":" + today.getSeconds();
 
+    React.useEffect(
+        () => {
+            async function getData() {
+                const res = await fetch("http://192.168.0.146/emeter/0")
+                const data = await res.json()
+                power = data.power
+                //setStarWarsData(data.emeters[0])
+            }
+            getData()
+        }, [time])
+
+
 
     setTimeout(()=>{
-
         updateData((
             prevData)=> {
-            let newData =[]
-            if (prevData.length > 5){
+            //remove first element to make the chart to move dynamically
+            console.log([...prevData, { dateTime: time, valueWatts: power}])
+            return(prevData.length > 15 ? [...prevData, { dateTime: time, valueWatts: power}].slice(1):[...prevData, { dateTime: time, valueWatts: power}])
 
-                newData= [...prevData, { dateTime: time, valueWatts: 112+variable*10}]
-                newData.shift()
-
-            }
-            else{
-                newData= [...prevData, { dateTime: time, valueWatts: 112+variable*10}]
-            }
-
-                return(newData)
             }
         )
 
-    },1000)
+    },500)
 
     return(
         <Paper>
